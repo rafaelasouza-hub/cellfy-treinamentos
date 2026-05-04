@@ -513,7 +513,7 @@ function renderTags() {
 }
 
 // =================== SALVAR TREINAMENTO ===================
-function salvarTreinamento() {
+async function salvarTreinamento() {
   const gestor = document.getElementById('f-gestor').value.trim();
   const setor  = document.getElementById('f-setor').value;
   const titulo = document.getElementById('f-titulo').value.trim();
@@ -543,6 +543,20 @@ function salvarTreinamento() {
   })));
   const baseURL = window.location.href.replace('gestor.html','');
   linkAtual = `${baseURL}presenca.html?d=${payload}`;
+  document.getElementById('link-display').textContent = 'Encurtando link...';
+  document.getElementById('btn-confirmar-modal') && (document.getElementById('btn-confirmar-modal').disabled = true);
+
+  // Encurta o link via TinyURL
+  try {
+    const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(linkAtual)}`);
+    const short = await res.text();
+    if(short.startsWith('https://')) {
+      linkAtual = short;
+    }
+  } catch(e) {
+    // Se falhar, mantém o link original
+  }
+
   document.getElementById('link-display').textContent = linkAtual;
 
   // QR simples (padrão visual, sem lib)
