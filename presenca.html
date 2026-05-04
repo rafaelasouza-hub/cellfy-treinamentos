@@ -328,7 +328,25 @@ async function confirmar() {
     ip = data.ip;
   } catch(e) {}
 
-  // Salva confirmação no treinamento
+  // Envia para o Google Sheets
+  fetch('https://script.google.com/macros/s/AKfycbxEuqwkfPVspzNBZQdMF6fcLEpjm2agIu3TTeY5FqTBG7-QKS8Pe6_18lmMYu3Zo1mZ/exec', {
+    method: 'POST',
+    body: JSON.stringify({
+      treinamentoId:   treinamento.id,
+      treinamento:     treinamento.titulo,
+      gestor:          treinamento.gestor,
+      setor:           treinamento.setor,
+      tipo:            treinamento.tipo,
+      modalidade:      treinamento.modalidade,
+      dataTreinamento: treinamento.data,
+      carga:           treinamento.carga,
+      nome:            nome,
+      email:           email,
+      timestamp:       timestamp,
+      ip:              ip
+    })
+  }).catch(console.error);
+
   // Salva confirmação no localStorage para o gestor ver depois
   let treinamentos = JSON.parse(localStorage.getItem('cellfy_treinamentos') || '[]');
   const idx = treinamentos.findIndex(t => t.token === treinamento.token);
