@@ -537,13 +537,16 @@ function salvarTreinamento() {
   treinamentos.unshift(reg);
   salvar();
 
-  // Gera link
+  // Codifica os dados do treinamento no próprio link (base64)
+  const payload = btoa(encodeURIComponent(JSON.stringify({
+    id, token, gestor, setor, titulo, tipo, modalidade: mod, data, carga
+  })));
   const baseURL = window.location.href.replace('gestor.html','');
-  linkAtual = `${baseURL}presenca.html?t=${token}`;
+  linkAtual = `${baseURL}presenca.html?d=${payload}`;
   document.getElementById('link-display').textContent = linkAtual;
 
   // QR simples (padrão visual, sem lib)
-  drawSimpleQR(token);
+  drawSimpleQR(payload);
 
   document.getElementById('modal').classList.add('open');
 
@@ -618,7 +621,11 @@ function renderHistorico() {
     const statusClass = conf > 0 ? 'badge-green' : 'badge-warn';
     const statusText  = conf > 0 ? `${conf} confirmado${conf>1?'s':''}` : 'aguardando';
     const baseURL = window.location.href.replace('gestor.html','');
-    const link = `${baseURL}presenca.html?t=${r.token}`;
+    const payload = btoa(encodeURIComponent(JSON.stringify({
+      id: r.id, token: r.token, gestor: r.gestor, setor: r.setor,
+      titulo: r.titulo, tipo: r.tipo, modalidade: r.modalidade, data: r.data, carga: r.carga
+    })));
+    const link = `${baseURL}presenca.html?d=${payload}`;
     const nomesConf = r.confirmados && r.confirmados.length
       ? r.confirmados.map(c=>c.nome).join(', ')
       : '—';

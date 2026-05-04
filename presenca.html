@@ -251,17 +251,11 @@
 </div>
 
 <script>
-// Lê token da URL
+// Lê dados do treinamento direto da URL (não depende de localStorage)
 const params = new URLSearchParams(window.location.search);
-const token  = params.get('t');
+const payload = params.get('d');
 
-// Busca treinamento no localStorage (dados compartilhados pelo gestor.html no mesmo domínio)
-let treinamentos = JSON.parse(localStorage.getItem('cellfy_treinamentos') || '[]');
-let treinamento  = null;
-
-function salvar() {
-  localStorage.setItem('cellfy_treinamentos', JSON.stringify(treinamentos));
-}
+let treinamento = null;
 
 function fmtDate(d) {
   if(!d) return '—';
@@ -269,14 +263,17 @@ function fmtDate(d) {
   return `${dd}/${m}/${y}`;
 }
 
-// Init
-if(!token) {
+// Decodifica payload da URL
+if(!payload) {
   showError();
 } else {
-  treinamento = treinamentos.find(t => t.token === token);
-  if(!treinamento) {
+  try {
+    treinamento = JSON.parse(decodeURIComponent(atob(payload)));
+  } catch(e) {
     showError();
-  } else {
+  }
+
+  if(treinamento) {
     // Preenche info
     document.getElementById('info-titulo').textContent = treinamento.titulo;
     const chips = [
@@ -291,7 +288,7 @@ if(!token) {
     document.getElementById('decl-data').textContent   = fmtDate(treinamento.data);
 
     // Verifica se já confirmou neste dispositivo
-    const jaConfirmou = localStorage.getItem('confirmado_' + token);
+    const jaConfirmou = localStorage.getItem('confirmado_' + treinamento.token);
     if(jaConfirmou) {
       document.getElementById('already-msg').style.display = 'block';
       document.getElementById('btn-confirmar').disabled = true;
@@ -332,16 +329,17 @@ async function confirmar() {
   } catch(e) {}
 
   // Salva confirmação no treinamento
-  if(!treinamento.confirmados) treinamento.confirmados = [];
-  treinamento.confirmados.push({ nome, email, timestamp, ip, userAgent });
-
-  // Atualiza array e salva
-  const idx = treinamentos.findIndex(t => t.token === token);
-  if(idx !== -1) treinamentos[idx] = treinamento;
-  salvar();
+  // Salva confirmação no localStorage para o gestor ver depois
+  let treinamentos = JSON.parse(localStorage.getItem('cellfy_treinamentos') || '[]');
+  const idx = treinamentos.findIndex(t => t.token === treinamento.token);
+  if(idx !== -1) {
+    if(!treinamentos[idx].confirmados) treinamentos[idx].confirmados = [];
+    treinamentos[idx].confirmados.push({ nome, email, timestamp, ip, userAgent });
+    localStorage.setItem('cellfy_treinamentos', JSON.stringify(treinamentos));
+  }
 
   // Marca dispositivo como já confirmado
-  localStorage.setItem('confirmado_' + token, '1');
+  localStorage.setItem('confirmado_' + treinamento.token, '1');
 
   // Mostra sucesso
   document.getElementById('form-card').style.display   = 'none';
