@@ -548,7 +548,7 @@ async function salvarTreinamento() {
 
   // Encurta o link via TinyURL
   try {
-    const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(linkAtual)}`);
+    const res = await fetch(`https://is.gd/create.php?format=simple&url=${encodeURIComponent(linkAtual)}`);
     const short = await res.text();
     if(short.startsWith('https://')) {
       linkAtual = short;
