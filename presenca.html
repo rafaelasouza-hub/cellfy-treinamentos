@@ -244,8 +244,9 @@
   <div class="success-state" id="success-state">
     <div class="success-icon">✓</div>
     <h2>Presença confirmada!</h2>
-    <p>Seu registro foi salvo com sucesso.<br>Um certificado será enviado por e-mail.</p>
+    <p>Seu registro foi salvo com sucesso.</p>
     <div class="timestamp-box" id="timestamp-box"></div>
+    <button class="btn-confirm" id="btn-certificado" style="margin-top:20px;background:var(--cyan);color:var(--navy);" onclick="abrirCertificado()">Baixar certificado →</button>
   </div>
 
 </div>
@@ -358,6 +359,9 @@ async function confirmar() {
 
   // Marca dispositivo como já confirmado
   localStorage.setItem('confirmado_' + treinamento.token, '1');
+  window._confirmTimestamp = timestamp;
+  window._confirmNome = nome;
+  window._confirmIP = ip;
 
   // Mostra sucesso
   document.getElementById('form-card').style.display   = 'none';
