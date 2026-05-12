@@ -227,7 +227,14 @@
       Este registro é auditável e vinculado à minha identidade.
     </div>
 
-    <button class="btn-confirm" id="btn-confirmar" onclick="confirmar()">Confirmar minha presença</button>
+    <button class="btn-confirm" id="btn-confirmar" onclick="enviarCodigo()">Enviar código de confirmação →</button>
+
+    <!-- ETAPA 2: código -->
+    <div id="etapa-codigo" style="display:none;margin-top:16px">
+      <label>Código recebido no e-mail</label>
+      <input type="text" id="codigo-input" placeholder="Digite o código de 6 dígitos" maxlength="6" style="letter-spacing:8px;font-size:20px;text-align:center" />
+      <button class="btn-confirm" id="btn-validar" onclick="validarCodigo()">Confirmar presença</button>
+    </div>
 
     <div class="already-confirmed" id="already-msg">
       Presença já registrada neste dispositivo.
@@ -302,7 +309,75 @@ function showError() {
   document.getElementById('error-state').style.display = 'block';
 }
 
-async function confirmar() {
+let _codigoGerado = '';
+let _nomeTemp = '';
+let _emailTemp = '';
+
+async function enviarCodigo() {
+  const nome  = document.getElementById('nome').value.trim();
+  const email = document.getElementById('email').value.trim();
+
+  if(!nome) {
+    document.getElementById('nome').style.borderColor='#FF6B6B';
+    setTimeout(()=>document.getElementById('nome').style.borderColor='',1500);
+    return;
+  }
+  if(!email || !email.includes('@')) {
+    document.getElementById('email').style.borderColor='#FF6B6B';
+    setTimeout(()=>document.getElementById('email').style.borderColor='',1500);
+    return;
+  }
+
+  const btn = document.getElementById('btn-confirmar');
+  btn.disabled = true;
+  btn.textContent = 'Enviando código...';
+
+  // Gera código de 6 dígitos
+  _codigoGerado = Math.floor(100000 + Math.random() * 900000).toString();
+  _nomeTemp  = nome;
+  _emailTemp = email;
+
+  // Envia código via webhook
+  try {
+    await fetch('https://script.google.com/macros/s/AKfycbxEuqwkfPVspzNBZQdMF6fcLEpjm2agIu3TTeY5FqTBG7-QKS8Pe6_18lmMYu3Zo1mZ/exec', {
+      method: 'POST',
+      body: JSON.stringify({
+        acao: 'enviarCodigo',
+        email: email,
+        nome: nome,
+        codigo: _codigoGerado,
+        treinamento: treinamento.titulo
+      })
+    });
+  } catch(e) {}
+
+  btn.textContent = 'Código enviado!';
+  document.getElementById('etapa-codigo').style.display = 'block';
+  document.getElementById('nome').disabled = true;
+  document.getElementById('email').disabled = true;
+}
+
+async function validarCodigo() {
+  const codigo = document.getElementById('codigo-input').value.trim();
+  if(codigo !== _codigoGerado) {
+    document.getElementById('codigo-input').style.borderColor='#FF6B6B';
+    document.getElementById('codigo-input').value = '';
+    document.getElementById('codigo-input').placeholder = 'Código incorreto. Tente novamente.';
+    setTimeout(()=>{
+      document.getElementById('codigo-input').style.borderColor='';
+      document.getElementById('codigo-input').placeholder='Digite o código de 6 dígitos';
+    }, 2000);
+    return;
+  }
+
+  const btn = document.getElementById('btn-validar');
+  btn.disabled = true;
+  btn.textContent = 'Confirmando...';
+
+  const nome  = _nomeTemp;
+  const email = _emailTemp;
+
+  async function confirmar() {
   const nome  = document.getElementById('nome').value.trim();
   const email = document.getElementById('email').value.trim();
 
@@ -361,6 +436,8 @@ async function confirmar() {
   window._confirmTimestamp = timestamp;
   window._confirmNome = nome;
   window._confirmIP = ip;
+  } // fecha confirmar()
+  confirmar();
 
   // Mostra sucesso
   document.getElementById('form-card').style.display   = 'none';
